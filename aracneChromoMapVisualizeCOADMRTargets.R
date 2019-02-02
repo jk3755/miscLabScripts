@@ -9,11 +9,8 @@ library(aracne.networks)
 library(mygene)
 library(chromoMap)
 
-
 ## Get the COAD interactome
 coadInteractome <- aracne.networks::reguloncoad
-
-
 ## List of COAD MRs (with motif binding sites)
 ## Entrez IDs in parentheses
 ## ASCL2 (430), ESRRA (2101), TCF7 (6932), POU5F1B (5462), HNF4A (3172), OVOL1 (5017)
@@ -31,83 +28,109 @@ mnx1Targets <- names(coadInteractome[["3110"]][["tfmode"]])
 zswim1Targets <- names(coadInteractome[["90204"]][["tfmode"]])
 cdx2Targets <- names(coadInteractome[["1045"]][["tfmode"]])
 
+## Build functions
+showTargetsChromoMap <- function(targets){
 
-## Retrieve annotation info for the regulator targets
-ascl2TargetsList <- list()
-for (a in 1:length(ascl2Targets)){
-  ascl2TargetsList[a] <- mygene::getGene(geneid = ascl2Targets[a], fields = "all")}
-
-# count the number of gene locations we have
-loc_count <- 0
-for (a in 1:length(mnx1_targets)){
-  if (is.null(target_list[[a]][["genomic_pos"]])){next} else {
-    if (is.list(target_list[[a]][["genomic_pos"]][[1]])){
-      loc_count <- (loc_count + length(target_list[[a]][["genomic_pos"]]))
-    } else {
-      loc_count <- (loc_count + 1)}}}
-
-# Retrieve the genomic coordinates of all network targets
-# retrieve all genomic coords here, can later trim non standard ones more easily with GRanges functions
-target_locations <- matrix(data = NA, nrow = loc_count, ncol = 4)
-colnames(target_locations) <- c("gene", "chr", "start", "end")
-idx <- 1
-#
-for (a in 1:loc_count){
+  numTargets <- length(targets)
+  ## Retrieve annotation info for the regulator targets
+  TargetsList <- list()
+  for (a in 1:length(targets)){
+    TargetsList[a] <- mygene::getGene(geneid = targets[a], fields = "all")}
   
-  if (is.null(target_list[[a]][["genomic_pos"]])){next} else {
-    
-    if (is.list(target_list[[a]][["genomic_pos"]][[1]])){
-      
-      for (b in 1:length(target_list[[a]][["genomic_pos"]])){
-        target_locations[idx,1] <- target_list[[a]][["symbol"]]
-        target_locations[idx,2] <- paste0("chr", target_list[[a]][["genomic_pos"]][[b]][["chr"]])
-        target_locations[idx,3] <- target_list[[a]][["genomic_pos"]][[b]][["start"]]
-        target_locations[idx,4] <- target_list[[a]][["genomic_pos"]][[b]][["end"]]
-        idx <- (idx+1)
-      } # end for (b in 1:length(target_list[[a]][["genomic_pos"]]))
-      
-    } else {
-      
-      target_locations[idx,1] <- target_list[[a]][["symbol"]]
-      target_locations[idx,2] <- paste0("chr", target_list[[a]][["genomic_pos"]][["chr"]])
-      target_locations[idx,3] <- target_list[[a]][["genomic_pos"]][["start"]]
-      target_locations[idx,4] <- target_list[[a]][["genomic_pos"]][["end"]]
-      idx <- (idx+1)}}}
+  # count the number of gene locations we have
+  locCount <- 0
+  for (a in 1:numTargets){
+    if (is.null(TargetsList[[a]][["genomic_pos"]])){next} else {
+      if (is.list(TargetsList[[a]][["genomic_pos"]][[1]])){
+        locCount <- (locCount + length(TargetsList[[a]][["genomic_pos"]]))
+      } else {
+        locCount <- (locCount + 1)}}}
+  
+  # Retrieve the genomic coordinates of all network targets
+  # retrieve all genomic coords here, can later trim non standard ones more easily with GRanges functions
+  TargetLocations <- matrix(data = NA, nrow = locCount, ncol = 4)
+  colnames(TargetLocations) <- c("gene", "chr", "start", "end")
+  idx <- 1
+  for (a in 1:numTargets){
+    if (is.null(TargetsList[[a]][["genomic_pos"]])){next} else {
+      if (is.list(TargetsList[[a]][["genomic_pos"]][[1]])){
+        for (b in 1:length(TargetsList[[a]][["genomic_pos"]])){
+          TargetLocations[idx,1] <- TargetsList[[a]][["symbol"]]
+          TargetLocations[idx,2] <- paste0("chr", TargetsList[[a]][["genomic_pos"]][[b]][["chr"]])
+          TargetLocations[idx,3] <- TargetsList[[a]][["genomic_pos"]][[b]][["start"]]
+          TargetLocations[idx,4] <- TargetsList[[a]][["genomic_pos"]][[b]][["end"]]
+          idx <- (idx+1)
+        } # end for (b in 1:length(target_list[[a]][["genomic_pos"]]))
+      } else {
+        TargetLocations[idx,1] <- TargetsList[[a]][["symbol"]]
+        TargetLocations[idx,2] <- paste0("chr", TargetsList[[a]][["genomic_pos"]][["chr"]])
+        TargetLocations[idx,3] <- TargetsList[[a]][["genomic_pos"]][["start"]]
+        TargetLocations[idx,4] <- TargetsList[[a]][["genomic_pos"]][["end"]]
+        idx <- (idx+1)}}}
+  
+  ## Convert the genomic locations of the targets into GRanges
+  TargetLocationsGR <- GRanges(
+    seqnames = TargetLocations[,2],
+    ranges = IRanges(start = as.numeric(TargetLocations[,3]), end = as.numeric(TargetLocations[,4])))
+  #strand = c(rep("+", times = num_names)),
+  #seqinfo = Seqinfo(genome="hg38"),
+  #score = c(rep(1, times = num_names)))
+  ## prune to standard xsomes
+  TargetLocationsGR <- keepStandardChromosomes(TargetLocationsGR, pruning.mode="coarse")
+  
+  
+  ## Visualize with chromoMap
+  ## If it doesnt show up, try reloading the library
+  canno <- data.frame(
+    name = c(1:length(TargetLocationsGR@elementMetadata@nrows)),
+    chrom = as.vector(TargetLocationsGR@seqnames, mode="any"),
+    start = TargetLocationsGR@ranges@start,
+    data = TargetLocationsGR@ranges@width)
+  
+  return(canno)
+}
 
-## Convert the genomic locations of the targets into GRanges
-gr <- GRanges(
-  seqnames = target_locations[,2],
-  ranges = IRanges(start = as.numeric(target_locations[,3]), end = as.numeric(target_locations[,4])))
-#strand = c(rep("+", times = num_names)),
-#seqinfo = Seqinfo(genome="hg38"),
-#score = c(rep(1, times = num_names)))
+## Get annotation objects
+ascl2Anno <- showTargetsChromoMap(ascl2Targets)
+esrraAnno <- showTargetsChromoMap(esrraTargets)
+tcf7Anno <- showTargetsChromoMap(tcf7Targets)
+pou5f1bAnno <- showTargetsChromoMap(pou5f1b2Targets)
+hnf4aAnno <- showTargetsChromoMap(hnf4aTargets)
+ovol1Anno <- showTargetsChromoMap(ovol1Targets)
+gmeb2Anno <- showTargetsChromoMap(gmeb2Targets)
+cbfa2t2Anno <- showTargetsChromoMap(cbfa2t2Targets)
+hoxa3Anno <- showTargetsChromoMap(hoxa3Targets)
+mnx1Anno <- showTargetsChromoMap(mnx1Targets)
+zswim1Anno <- showTargetsChromoMap(zswim1Targets)
+cdx2Anno <- showTargetsChromoMap(cdx2Targets)
 
-# prune to standard xsomes
-gr <- keepStandardChromosomes(gr, pruning.mode="coarse")
+## Build chromomap objects
+cmapASCL2 <- chromoMap(ascl2Anno, type = "annotation")
+cmapESRRA <- chromoMap(esrraAnno, type = "annotation")
+cmapTCF7 <- chromoMap(tcf7Anno, type = "annotation")
+cmapPOU5F1B <- chromoMap(pou5f1bAnno, type = "annotation")
+cmapHNF4A <- chromoMap(hnf4aAnno, type = "annotation")
+cmapOVOL1 <- chromoMap(ovol1Anno, type = "annotation")
+cmapGMEB2 <- chromoMap(gmeb2Anno, type = "annotation")
+cmapCBFA2T2 <- chromoMap(cbfa2t2Anno, type = "annotation")
+cmapHOXA3 <- chromoMap(hoxa3Anno, type = "annotation")
+cmapMNX1 <- chromoMap(mnx1Anno, type = "annotation")
+cmapZSWIM1 <- chromoMap(zswim1Anno, type = "annotation")
+cmapCDX2 <- chromoMap(cdx2Anno, type = "annotation")
 
+## Visualize the chromomaps
+## If it doesn't show up, try loading library again
+library(chromoMap)
+cmapASCL2
+cmapESRRA
+cmapTCF7
+cmapPOU5F1B
+cmapHNF4A
+cmapOVOL1
+cmapGMEB2
+cmapCBFA2T2
+cmapHOXA3
+cmapMNX1
+cmapZSWIM1
+cmapCDX2
 
-## Intersect the targets GRanges with the binding sites list
-intersection <- intersect(gr, wg_sites)
-canno <- data.frame(
-  name = c(1:148),
-  chrom = as.vector(gr@seqnames, mode="any"),
-  start = gr@ranges@start,
-  data = gr@ranges@width)
-
-
-cmap <- chromoMap(canno, type = "annotation")
-cmap <- chromoMap(gr, type ="heatmap-single", HeatColRange = c("blue","white","red"))
-
-
-
-gr1 <- GRanges(
-  seqnames = c("chr1", "chr2"),
-  ranges = IRanges(start = c(1000, 1000), end = c(2000, 2000))
-)
-
-gr2 <- GRanges(
-  seqnames = c("chr1", "chr3"),
-  ranges = IRanges(start = c(1900, 1000), end = c(3000, 2000))
-)
-
-gr3 <- intersect(gr1, gr2)
