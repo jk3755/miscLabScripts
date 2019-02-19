@@ -8,18 +8,16 @@ txdb <- TxDb.Hsapiens.UCSC.hg38.knownGene
 # used for readBed()
 library(genomation)
 
-## ** NEED TO USE ENSEMBL TRANSCRIPT ID, NOT GENE ID ** ## ???? no
-
 ## The input file (2490 lines)
-inputFile <- "C:\\Users\\jsk33\\Documents\\atac\\mydata\\snu61\\snu61_tfc"
+inputFile <- "C:\\Users\\jsk33\\Documents\\git\\miscLabScripts\\atacAnalysis\\Jeremy\\snu61_tfc"
 ## Read in the file
 expData <- read.table(inputFile, header=TRUE, sep = ',')
 
 ## Show the available data (columns) from TxDb
-columns(txdb)
-colum <- c("TXID", "TXNAME")
+#columns(txdb)
+#colum <- c("TXID", "TXNAME")
 ## Show available database select keytypes from TxDb
-keytypes(txdb)
+#keytypes(txdb)
 
 ## Make a column key to retrieve all info for each gene
 #colKey <- c(columns(txdb)) # for all columns
@@ -27,72 +25,81 @@ keytypes(txdb)
 geneKey <- c(as.character(expData[,3]))
 
 ## Use the select method to get mapping between tx_id and gene_id
-annotData <- select(txdb, keys = geneKey, columns = columns(txdb), keytype = "GENEID")
+annotData <- select(txdb, keys = geneKey, columns = "TXNAME", keytype = "GENEID")
 ## Make a vector with the tx_names
 txNames <- c(annotData[,2])
 
 ## Get promoters for all transcripts from TxDb
 ## Upstream and downstream can be custom set, default seems to be -2000/+200 from TSS
-promoters <- promoters(txdb)
+promoters <- promoters(txdb, upstream = 200, downstream = 0)
 ## Trim the GRanges object to keep standard entries only
 promoters <- keepStandardChromosomes(promoters, pruning.mode="coarse")
 ## Subset the promoters GRanges object using the generated index
 ## Note that with multiple transcript variants, this number will be much higher than the gene_id list
 promoterData <- promoters[promoters$tx_name %in% txNames]
-
-##
+## Add gene IDS
 newTxName <- promoterData@elementMetadata@listData[["tx_name"]]
 ##
 newGeneID <- c()
 ##
 for (a in 1:length(newTxName)){
   idx <- which(newTxName[a] == annotData[,2])
-  newGeneID[a] <- annotData[idx,1]
-}
-
+  newGeneID[a] <- annotData[idx,1]}
+## Check how many unique genes there are now
+length(unique(newGeneID))
 ## Add the GeneIDs to the promoters GRanges
 promoterData@elementMetadata@listData[["gene_id"]] <- c(newGeneID)
 
-## Cleanup workspace
-rm(promoters, a, geneKey, idx, inputFile, newGeneID, newTxName, txdb, txNames)
+#### There will be duplicate entries for gene IDs in the promoterData Granges, so lets keep only one for each
+unIdx <- c()
+##
+for (b in 1:length(geneKey)){
+  tempIdx <- c(which(promoterData@elementMetadata@listData[["gene_id"]] == geneKey[b]))
+  unIdx <- c(unIdx, tempIdx[1])}
+## As a sanity check
+length(unique(unIdx))
+## Remove NAs
+unIdx <- unIdx[which(is.na(unIdx) == FALSE)]
+##
+uniquePromoters <- promoterData[unIdx]
+##
+length(unique(uniquePromoters@elementMetadata@listData[["gene_id"]]))
 
 
 #### Scan for peaks in the SNU-61 replicate-merged file
-
 ## Read in the bed file
 bedFile <- "C:\\Users\\jsk33\\Documents\\atac\\mydata\\snu61\\wt01\\peaks\\SNU61-WT-01.all_summits.bed"
 snu61Peaks <- readBed(bedFile, track.line = FALSE, remove.unusual = FALSE, zero.based = TRUE)
 ## Keep standard ranges
 snu61Peaks <- keepStandardChromosomes(snu61Peaks, pruning.mode="coarse")
 
-## Find overlapping ranges between peaks and genes
-overlaps <- findOverlaps(snu61Peaks, promoterData)
 
+#### Find overlapping ranges between peaks and genes
+overlaps <- findOverlaps(snu61Peaks, uniquePromoters)
 ## How many of the overlaps referend unique annotated promoters?
 idxuq <- unique(overlaps@to)
 ## Get a GRanges of the genes that have a peak
-genePeaks <- promoterData[idxuq]
-
+genePeaks <- uniquePromoters[idxuq]
 ## How many of these are unique GeneIDs? 
 length(unique(genePeaks@elementMetadata@listData[["gene_id"]]))
 ##
 activeGenePromoters <- unique(genePeaks@elementMetadata@listData[["gene_id"]])
-idx2 <- which(activeGenePromoters %in% expData[,3])
-
+## Sanity check
+idx2 <- which(expData[,3] %in% activeGenePromoters)
+## Add the peak calls
+expData$peak <- "BLACK"
+expData$peak[idx2] <- "RED"
+  
 ## Change -inf values to -11
 idx3 <- which(expData[,6] == "-Inf")
-expData[idx3,6] <- -12
+expData[idx3,6] <- -11
 
 ## Sort the data
-sortedExpData <- expData[order(expData$SNU61_LARGE_INTESTINE_log2),]
-## Annotate the genes with peaks
-sortedExpData$peak <- "RED"
-idx4 <- which(expData[,3] %in% activeGenePromoters)
-sortedExpData$peak[idx4] <- "BLACK"
+sortedExpData <- expData[order(expData$SNU61_LARGE_INTESTINE_log2, decreasing = FALSE),]
 
 ## What does this plot tell us?
-#plot(sortedExpData[,6], col = sortedExpData$peak)
-plot(sortedExpData[,6])
+plot(sortedExpData[,6], col = sortedExpData$peak)
+#plot(sortedExpData[,6])
 
 ##
 hist(sortedExpData[,6], breaks = 40)
