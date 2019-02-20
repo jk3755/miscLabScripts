@@ -73,11 +73,18 @@ promoterData@elementMetadata@listData[["gene_id"]] <- c(newGeneID)
 unIdx <- c()
 for (b in 1:length(geneKey)){
   tempIdx <- c(which(promoterData@elementMetadata@listData[["gene_id"]] == geneKey[b]))
-  unIdx <- c(unIdx, tempIdx[1])}
+  unIdx[b] <- tempIdx[1]}
+
 ## As a sanity check
 length(unique(unIdx))
 ## Remove NAs
 unIdx <- unIdx[which(is.na(unIdx) == FALSE)]
+## Remove duplicate IDS
+unIdx <- unique(unIdx)
+## As a sanity check
+length(unique(unIdx))
+
+
 ## Subset for unique only
 uniquePromoters <- promoterData[unIdx]
 ## Check number of entries
@@ -174,8 +181,44 @@ plot(ratios)
 uniquePromoters@elementMetadata$id <- uniquePromoters@elementMetadata@listData[["gene_id"]]
 annotUP <- createAnnotationFile(uniquePromoters)
 ## Get raw counts for each range
-uniquePromoterCounts <- featureCounts(files = inputBam, nthreads = 4, annot.ext = annotUP)
+uniquePromoterCounts <- featureCounts(files = inputBam, nthreads = 20, annot.ext = annotUP)
 
 
+#### FIX THIS LATER ####
+expData <- expData[-1114,]
+expData <- expData[-1882,]
+expData <- expData[-1909,]
+expData <- expData[-2478,]
+#### FIX THIS LATER ####
+
+
+## Pull the required log2exp values
+log2Matrix <- matrix(data = NA, nrow = length(uniquePromoters@elementMetadata@listData[["gene_id"]]), ncol = 2)
+colnames(log2Matrix) <- c("ID", "log2exp")
+##
+for (x in 1:length(uniquePromoters@elementMetadata@listData[["gene_id"]])){
+  
+  genetemp <- uniquePromoters@elementMetadata@listData[["gene_id"]][[x]]
+  ##
+  log2Matrix[x,1] <- genetemp
+  log2Matrix[x,2] <- expData[idxtemp,6]}
+
+
+## Create a matrix to hold the log2 expression and ATACseq signal of the genes
+## Rownames are geneID
+plotMatrix <- matrix(data = NA, nrow = length(uniquePromoters@ranges@start), ncol = 2)
+colnames(plotMatrix) <- c("log2exp", "accessibility")
+##
+plotMatrix[,1] <- log2Matrix[,2]
+## Check that two matrices are in same order and aligned
+for (l in 1:2435){
+  if (log2Matrix[l,1] != uniquePromoterCounts[["annotation"]][["GeneID"]][[l]]){cat("MISMATCH")}}
+
+## Add the ATACseq signals
+plotMatrix[,2] <- uniquePromoterCounts[["counts"]]
+
+#### Sort and plot the data
+sortedplotMatrix <- plotMatrix[order(plotMatrix[,1], decreasing = FALSE),]
+plot(sortedplotMatrix)
 
 
