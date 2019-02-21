@@ -219,6 +219,9 @@ plotMatrix[,2] <- uniquePromoterCounts[["counts"]]
 
 #### Sort and plot the data
 sortedplotMatrix <- plotMatrix[order(plotMatrix[,1], decreasing = FALSE),]
-plot(sortedplotMatrix)
+
+##
+plot(sortedplotMatrix[,1], sortedplotMatrix[,2])
+plot(sortedplotMatrix[,2], sortedplotMatrix[,1])
 
 
