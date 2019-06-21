@@ -1,0 +1,121 @@
+---
+title: "Untitled"
+author: "Jordan S. Kesner"
+date: "January 7, 2019"
+output: html_document
+---
+
+
+```{r}
+
+install.packages("progress")
+
+
+
+library(tcltk)
+library(progress)
+
+
+```
+
+
+
+```{r}
+total <- 20
+for(i in 1:total){
+   Sys.sleep(0.1)
+   print(i)
+   # update GUI console
+   flush.console()                          
+}
+```
+
+
+
+
+```{r}
+
+
+total <- 20
+# create progress bar
+pb <- txtProgressBar(min = 0, max = total, style = 3)
+for(i in 1:total){
+   Sys.sleep(0.1)
+   # update progress bar
+   setTxtProgressBar(pb, i)
+}
+close(pb)
+
+
+
+```
+
+
+
+```{r}
+total <- 200
+# create progress bar
+pb <- tkProgressBar(title = "progress bar", min = 0,
+                    max = total, width = 300)
+
+for(i in 1:total){
+   Sys.sleep(0.1)
+   setTkProgressBar(pb, i, label=paste( round(i/total*100, 0),
+                                        "% done"))
+}
+close(pb)
+```
+
+
+Progress package
+```{r}
+
+
+
+pb <- progress_bar$new(total = 100)
+for (i in 1:100) {
+  pb$tick()
+  Sys.sleep(1 / 100)
+}
+
+#
+
+pb <- progress_bar$new(total = 100)
+f <- function() {
+  pb$tick(0)
+  Sys.sleep(3)
+  for (i in 1:100) {
+    pb$tick()
+    Sys.sleep(1 / 100)
+  }
+}
+f()
+
+#
+
+pb <- progress_bar$new(
+  format = "  downloading [:bar] :percent eta: :eta",
+  total = 100, clear = FALSE, width= 60)
+for (i in 1:100) {
+  pb$tick()
+  Sys.sleep(1 / 100)
+}
+
+#
+
+pb <- progress_bar$new(
+  format = "  downloading [:bar] :percent in :elapsed",
+  total = 100, clear = FALSE, width= 60)
+for (i in 1:100) {
+  pb$tick()
+  Sys.sleep(1 / 100)
+}
+
+#
+
+```
+
+
+
+
+
