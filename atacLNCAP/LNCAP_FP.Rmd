@@ -1,3 +1,7 @@
+
+
+SETUP
+```{r}
 #### Disable scientific notation in variables
 options(scipen = 999)
 options(warn = -1)
@@ -79,8 +83,11 @@ MYC.sites.path <- "C:\\Users\\jsk33\\Desktop\\lncap\\MYC.bindingSites.RDS"
 MYCN.sites.path <- "C:\\Users\\jsk33\\Desktop\\lncap\\MYCN.bindingSites.RDS"
 SOX2.sites.path <- "C:\\Users\\jsk33\\Desktop\\lncap\\SOX2.bindingSites.RDS"
 #### INPUT FILES ##################################################################################################
+```
 
-#### AR ###########################################################################################################
+AR
+```{r}
+
 AR.sites.data <- readRDS(AR.sites.path)
 AR.sites <- AR.sites.data[[1]][["sites"]]
 AR.sites@elementType <- "GENE"
@@ -875,10 +882,11 @@ FPdata.AR$CR08 <- AR.CR08
 #### SAVE ####
 outPath <- "C:\\Users\\jsk33\\Desktop\\lncap\\FPdata.AR.RDS"
 saveRDS(FPdata.AR, file = outPath)
+```
 
+SOX2
+```{r}
 
-
-#### SOX2 #################################################################################################################################################################################
 SOX2.sites.data <- readRDS(SOX2.sites.path)
 SOX2.sites <- SOX2.sites.data[[1]][["sites"]]
 SOX2.sites@elementType <- "GENE"
@@ -1673,33 +1681,34 @@ FPdata.SOX2$CR08 <- SOX2.CR08
 #### SAVE ####
 outPath <- "C:\\Users\\jsk33\\Desktop\\lncap\\FPdata.SOX2.RDS"
 saveRDS(FPdata.SOX2, file = outPath)
+```
 
+EZH2
+```{r}
 
-
-#### SOX2 #################################################################################################################################################################################
-SOX2.sites.data <- readRDS(SOX2.sites.path)
-SOX2.sites <- SOX2.sites.data[[1]][["sites"]]
-SOX2.sites@elementType <- "GENE"
-SOX2.sites <- keepStandardChromosomes(SOX2.sites, pruning.mode="coarse")
-SOX2.sites <- trim(SOX2.sites)
-numSites <- length(SOX2.sites)
-motifWidth <- length(SOX2.sites.data[[1]][["PWM"]][1,])
-extSites <- promoters(SOX2.sites, upstream = 250, downstream = (250 + motifWidth), use.names=TRUE)
+EZH2.sites.data <- readRDS(EZH2.sites.path)
+EZH2.sites <- EZH2.sites.data[[1]][["sites"]]
+EZH2.sites@elementType <- "GENE"
+EZH2.sites <- keepStandardChromosomes(EZH2.sites, pruning.mode="coarse")
+EZH2.sites <- trim(EZH2.sites)
+numSites <- length(EZH2.sites)
+motifWidth <- length(EZH2.sites.data[[1]][["PWM"]][1,])
+extSites <- promoters(EZH2.sites, upstream = 250, downstream = (250 + motifWidth), use.names=TRUE)
 extSites <- keepStandardChromosomes(extSites, pruning.mode="coarse")
 extSites <- trim(extSites)
 param <- ScanBamParam(which = extSites)
 ##
-FPdata.SOX2 <- list()
-SOX2.CR01 <- list()
-SOX2.CR02 <- list()
-SOX2.CR04 <- list()
-SOX2.CR05 <- list()
-SOX2.CR07 <- list()
-SOX2.CR08 <- list()
-SOX2.WT01 <- list()
-SOX2.WT02 <- list()
+FPdata.EZH2 <- list()
+EZH2.CR01 <- list()
+EZH2.CR02 <- list()
+EZH2.CR04 <- list()
+EZH2.CR05 <- list()
+EZH2.CR07 <- list()
+EZH2.CR08 <- list()
+EZH2.WT01 <- list()
+EZH2.WT02 <- list()
 
-#### SOX2 - CR01 ####
+#### CR01 ####
 bamIn <- readGAlignments(bam.CR01, param = param)
 grIn <- granges(bamIn)
 grIn <- keepStandardChromosomes(grIn, pruning.mode="coarse")
@@ -1774,27 +1783,27 @@ idxBHpass <- which(BHpvalue < 0.05)
 BHpvaluePass <- pvalue[idxBHpass]
 BHpassNumSites <- length(idxBHpass)
 ## Transfer ##
-SOX2.CR01$insMatrix <- insMatrix
-SOX2.CR01$libSize <- libSize
-SOX2.CR01$coverageSize <- coverageSize
-SOX2.CR01$libFactor <- libFactor
-SOX2.CR01$rawSiteBasicStats <- rawSiteBasicStats
-SOX2.CR01$rawInsProb <- rawInsProb
-SOX2.CR01$ttest <- ttest
-SOX2.CR01$pvalue <- pvalue
-SOX2.CR01$tvalue <- tvalue
-SOX2.CR01$idxPvaluePass <- idxPvaluePass
-SOX2.CR01$pvaluePass <- pvaluePass
-SOX2.CR01$ppassNumSites <- ppassNumSites
-SOX2.CR01$idxBFpass <- idxBFpass
-SOX2.CR01$BFpvaluePass <- BFpvaluePass
-SOX2.CR01$BFpassNumSites <- BFpassNumSites
-SOX2.CR01$BHpvalue <- BHpvalue
-SOX2.CR01$idxBHpass <- idxBHpass
-SOX2.CR01$BHpvaluePass <- BHpvaluePass
-SOX2.CR01$BHpassNumSites <- BHpassNumSites
+EZH2.CR01$insMatrix <- insMatrix
+EZH2.CR01$libSize <- libSize
+EZH2.CR01$coverageSize <- coverageSize
+EZH2.CR01$libFactor <- libFactor
+EZH2.CR01$rawSiteBasicStats <- rawSiteBasicStats
+EZH2.CR01$rawInsProb <- rawInsProb
+EZH2.CR01$ttest <- ttest
+EZH2.CR01$pvalue <- pvalue
+EZH2.CR01$tvalue <- tvalue
+EZH2.CR01$idxPvaluePass <- idxPvaluePass
+EZH2.CR01$pvaluePass <- pvaluePass
+EZH2.CR01$ppassNumSites <- ppassNumSites
+EZH2.CR01$idxBFpass <- idxBFpass
+EZH2.CR01$BFpvaluePass <- BFpvaluePass
+EZH2.CR01$BFpassNumSites <- BFpassNumSites
+EZH2.CR01$BHpvalue <- BHpvalue
+EZH2.CR01$idxBHpass <- idxBHpass
+EZH2.CR01$BHpvaluePass <- BHpvaluePass
+EZH2.CR01$BHpassNumSites <- BHpassNumSites
 
-#### SOX2 - CR02 ####
+#### CR02 ####
 bamIn <- readGAlignments(bam.CR02, param = param)
 grIn <- granges(bamIn)
 grIn <- keepStandardChromosomes(grIn, pruning.mode="coarse")
@@ -1869,27 +1878,27 @@ idxBHpass <- which(BHpvalue < 0.05)
 BHpvaluePass <- pvalue[idxBHpass]
 BHpassNumSites <- length(idxBHpass)
 ## Transfer ##
-SOX2.CR02$insMatrix <- insMatrix
-SOX2.CR02$libSize <- libSize
-SOX2.CR02$coverageSize <- coverageSize
-SOX2.CR02$libFactor <- libFactor
-SOX2.CR02$rawSiteBasicStats <- rawSiteBasicStats
-SOX2.CR02$rawInsProb <- rawInsProb
-SOX2.CR02$ttest <- ttest
-SOX2.CR02$pvalue <- pvalue
-SOX2.CR02$tvalue <- tvalue
-SOX2.CR02$idxPvaluePass <- idxPvaluePass
-SOX2.CR02$pvaluePass <- pvaluePass
-SOX2.CR02$ppassNumSites <- ppassNumSites
-SOX2.CR02$idxBFpass <- idxBFpass
-SOX2.CR02$BFpvaluePass <- BFpvaluePass
-SOX2.CR02$BFpassNumSites <- BFpassNumSites
-SOX2.CR02$BHpvalue <- BHpvalue
-SOX2.CR02$idxBHpass <- idxBHpass
-SOX2.CR02$BHpvaluePass <- BHpvaluePass
-SOX2.CR02$BHpassNumSites <- BHpassNumSites
+EZH2.CR02$insMatrix <- insMatrix
+EZH2.CR02$libSize <- libSize
+EZH2.CR02$coverageSize <- coverageSize
+EZH2.CR02$libFactor <- libFactor
+EZH2.CR02$rawSiteBasicStats <- rawSiteBasicStats
+EZH2.CR02$rawInsProb <- rawInsProb
+EZH2.CR02$ttest <- ttest
+EZH2.CR02$pvalue <- pvalue
+EZH2.CR02$tvalue <- tvalue
+EZH2.CR02$idxPvaluePass <- idxPvaluePass
+EZH2.CR02$pvaluePass <- pvaluePass
+EZH2.CR02$ppassNumSites <- ppassNumSites
+EZH2.CR02$idxBFpass <- idxBFpass
+EZH2.CR02$BFpvaluePass <- BFpvaluePass
+EZH2.CR02$BFpassNumSites <- BFpassNumSites
+EZH2.CR02$BHpvalue <- BHpvalue
+EZH2.CR02$idxBHpass <- idxBHpass
+EZH2.CR02$BHpvaluePass <- BHpvaluePass
+EZH2.CR02$BHpassNumSites <- BHpassNumSites
 
-#### SOX2 - CR04 ####
+#### CR04 ####
 bamIn <- readGAlignments(bam.CR04, param = param)
 grIn <- granges(bamIn)
 grIn <- keepStandardChromosomes(grIn, pruning.mode="coarse")
@@ -1964,27 +1973,27 @@ idxBHpass <- which(BHpvalue < 0.05)
 BHpvaluePass <- pvalue[idxBHpass]
 BHpassNumSites <- length(idxBHpass)
 ## Transfer ##
-SOX2.CR04$insMatrix <- insMatrix
-SOX2.CR04$libSize <- libSize
-SOX2.CR04$coverageSize <- coverageSize
-SOX2.CR04$libFactor <- libFactor
-SOX2.CR04$rawSiteBasicStats <- rawSiteBasicStats
-SOX2.CR04$rawInsProb <- rawInsProb
-SOX2.CR04$ttest <- ttest
-SOX2.CR04$pvalue <- pvalue
-SOX2.CR04$tvalue <- tvalue
-SOX2.CR04$idxPvaluePass <- idxPvaluePass
-SOX2.CR04$pvaluePass <- pvaluePass
-SOX2.CR04$ppassNumSites <- ppassNumSites
-SOX2.CR04$idxBFpass <- idxBFpass
-SOX2.CR04$BFpvaluePass <- BFpvaluePass
-SOX2.CR04$BFpassNumSites <- BFpassNumSites
-SOX2.CR04$BHpvalue <- BHpvalue
-SOX2.CR04$idxBHpass <- idxBHpass
-SOX2.CR04$BHpvaluePass <- BHpvaluePass
-SOX2.CR04$BHpassNumSites <- BHpassNumSites
+EZH2.CR04$insMatrix <- insMatrix
+EZH2.CR04$libSize <- libSize
+EZH2.CR04$coverageSize <- coverageSize
+EZH2.CR04$libFactor <- libFactor
+EZH2.CR04$rawSiteBasicStats <- rawSiteBasicStats
+EZH2.CR04$rawInsProb <- rawInsProb
+EZH2.CR04$ttest <- ttest
+EZH2.CR04$pvalue <- pvalue
+EZH2.CR04$tvalue <- tvalue
+EZH2.CR04$idxPvaluePass <- idxPvaluePass
+EZH2.CR04$pvaluePass <- pvaluePass
+EZH2.CR04$ppassNumSites <- ppassNumSites
+EZH2.CR04$idxBFpass <- idxBFpass
+EZH2.CR04$BFpvaluePass <- BFpvaluePass
+EZH2.CR04$BFpassNumSites <- BFpassNumSites
+EZH2.CR04$BHpvalue <- BHpvalue
+EZH2.CR04$idxBHpass <- idxBHpass
+EZH2.CR04$BHpvaluePass <- BHpvaluePass
+EZH2.CR04$BHpassNumSites <- BHpassNumSites
 
-#### SOX2 - CR05 ####
+#### CR05 ####
 bamIn <- readGAlignments(bam.CR05, param = param)
 grIn <- granges(bamIn)
 grIn <- keepStandardChromosomes(grIn, pruning.mode="coarse")
@@ -2059,27 +2068,27 @@ idxBHpass <- which(BHpvalue < 0.05)
 BHpvaluePass <- pvalue[idxBHpass]
 BHpassNumSites <- length(idxBHpass)
 ## Transfer ##
-SOX2.CR05$insMatrix <- insMatrix
-SOX2.CR05$libSize <- libSize
-SOX2.CR05$coverageSize <- coverageSize
-SOX2.CR05$libFactor <- libFactor
-SOX2.CR05$rawSiteBasicStats <- rawSiteBasicStats
-SOX2.CR05$rawInsProb <- rawInsProb
-SOX2.CR05$ttest <- ttest
-SOX2.CR05$pvalue <- pvalue
-SOX2.CR05$tvalue <- tvalue
-SOX2.CR05$idxPvaluePass <- idxPvaluePass
-SOX2.CR05$pvaluePass <- pvaluePass
-SOX2.CR05$ppassNumSites <- ppassNumSites
-SOX2.CR05$idxBFpass <- idxBFpass
-SOX2.CR05$BFpvaluePass <- BFpvaluePass
-SOX2.CR05$BFpassNumSites <- BFpassNumSites
-SOX2.CR05$BHpvalue <- BHpvalue
-SOX2.CR05$idxBHpass <- idxBHpass
-SOX2.CR05$BHpvaluePass <- BHpvaluePass
-SOX2.CR05$BHpassNumSites <- BHpassNumSites
+EZH2.CR05$insMatrix <- insMatrix
+EZH2.CR05$libSize <- libSize
+EZH2.CR05$coverageSize <- coverageSize
+EZH2.CR05$libFactor <- libFactor
+EZH2.CR05$rawSiteBasicStats <- rawSiteBasicStats
+EZH2.CR05$rawInsProb <- rawInsProb
+EZH2.CR05$ttest <- ttest
+EZH2.CR05$pvalue <- pvalue
+EZH2.CR05$tvalue <- tvalue
+EZH2.CR05$idxPvaluePass <- idxPvaluePass
+EZH2.CR05$pvaluePass <- pvaluePass
+EZH2.CR05$ppassNumSites <- ppassNumSites
+EZH2.CR05$idxBFpass <- idxBFpass
+EZH2.CR05$BFpvaluePass <- BFpvaluePass
+EZH2.CR05$BFpassNumSites <- BFpassNumSites
+EZH2.CR05$BHpvalue <- BHpvalue
+EZH2.CR05$idxBHpass <- idxBHpass
+EZH2.CR05$BHpvaluePass <- BHpvaluePass
+EZH2.CR05$BHpassNumSites <- BHpassNumSites
 
-#### SOX2 - CR07 ####
+#### CR07 ####
 bamIn <- readGAlignments(bam.CR07, param = param)
 grIn <- granges(bamIn)
 grIn <- keepStandardChromosomes(grIn, pruning.mode="coarse")
@@ -2154,27 +2163,27 @@ idxBHpass <- which(BHpvalue < 0.05)
 BHpvaluePass <- pvalue[idxBHpass]
 BHpassNumSites <- length(idxBHpass)
 ## Transfer ##
-SOX2.CR07$insMatrix <- insMatrix
-SOX2.CR07$libSize <- libSize
-SOX2.CR07$coverageSize <- coverageSize
-SOX2.CR07$libFactor <- libFactor
-SOX2.CR07$rawSiteBasicStats <- rawSiteBasicStats
-SOX2.CR07$rawInsProb <- rawInsProb
-SOX2.CR07$ttest <- ttest
-SOX2.CR07$pvalue <- pvalue
-SOX2.CR07$tvalue <- tvalue
-SOX2.CR07$idxPvaluePass <- idxPvaluePass
-SOX2.CR07$pvaluePass <- pvaluePass
-SOX2.CR07$ppassNumSites <- ppassNumSites
-SOX2.CR07$idxBFpass <- idxBFpass
-SOX2.CR07$BFpvaluePass <- BFpvaluePass
-SOX2.CR07$BFpassNumSites <- BFpassNumSites
-SOX2.CR07$BHpvalue <- BHpvalue
-SOX2.CR07$idxBHpass <- idxBHpass
-SOX2.CR07$BHpvaluePass <- BHpvaluePass
-SOX2.CR07$BHpassNumSites <- BHpassNumSites
+EZH2.CR07$insMatrix <- insMatrix
+EZH2.CR07$libSize <- libSize
+EZH2.CR07$coverageSize <- coverageSize
+EZH2.CR07$libFactor <- libFactor
+EZH2.CR07$rawSiteBasicStats <- rawSiteBasicStats
+EZH2.CR07$rawInsProb <- rawInsProb
+EZH2.CR07$ttest <- ttest
+EZH2.CR07$pvalue <- pvalue
+EZH2.CR07$tvalue <- tvalue
+EZH2.CR07$idxPvaluePass <- idxPvaluePass
+EZH2.CR07$pvaluePass <- pvaluePass
+EZH2.CR07$ppassNumSites <- ppassNumSites
+EZH2.CR07$idxBFpass <- idxBFpass
+EZH2.CR07$BFpvaluePass <- BFpvaluePass
+EZH2.CR07$BFpassNumSites <- BFpassNumSites
+EZH2.CR07$BHpvalue <- BHpvalue
+EZH2.CR07$idxBHpass <- idxBHpass
+EZH2.CR07$BHpvaluePass <- BHpvaluePass
+EZH2.CR07$BHpassNumSites <- BHpassNumSites
 
-#### SOX2 - CR08 ####
+#### CR08 ####
 bamIn <- readGAlignments(bam.CR08, param = param)
 grIn <- granges(bamIn)
 grIn <- keepStandardChromosomes(grIn, pruning.mode="coarse")
@@ -2249,27 +2258,27 @@ idxBHpass <- which(BHpvalue < 0.05)
 BHpvaluePass <- pvalue[idxBHpass]
 BHpassNumSites <- length(idxBHpass)
 ## Transfer ##
-SOX2.CR08$insMatrix <- insMatrix
-SOX2.CR08$libSize <- libSize
-SOX2.CR08$coverageSize <- coverageSize
-SOX2.CR08$libFactor <- libFactor
-SOX2.CR08$rawSiteBasicStats <- rawSiteBasicStats
-SOX2.CR08$rawInsProb <- rawInsProb
-SOX2.CR08$ttest <- ttest
-SOX2.CR08$pvalue <- pvalue
-SOX2.CR08$tvalue <- tvalue
-SOX2.CR08$idxPvaluePass <- idxPvaluePass
-SOX2.CR08$pvaluePass <- pvaluePass
-SOX2.CR08$ppassNumSites <- ppassNumSites
-SOX2.CR08$idxBFpass <- idxBFpass
-SOX2.CR08$BFpvaluePass <- BFpvaluePass
-SOX2.CR08$BFpassNumSites <- BFpassNumSites
-SOX2.CR08$BHpvalue <- BHpvalue
-SOX2.CR08$idxBHpass <- idxBHpass
-SOX2.CR08$BHpvaluePass <- BHpvaluePass
-SOX2.CR08$BHpassNumSites <- BHpassNumSites
+EZH2.CR08$insMatrix <- insMatrix
+EZH2.CR08$libSize <- libSize
+EZH2.CR08$coverageSize <- coverageSize
+EZH2.CR08$libFactor <- libFactor
+EZH2.CR08$rawSiteBasicStats <- rawSiteBasicStats
+EZH2.CR08$rawInsProb <- rawInsProb
+EZH2.CR08$ttest <- ttest
+EZH2.CR08$pvalue <- pvalue
+EZH2.CR08$tvalue <- tvalue
+EZH2.CR08$idxPvaluePass <- idxPvaluePass
+EZH2.CR08$pvaluePass <- pvaluePass
+EZH2.CR08$ppassNumSites <- ppassNumSites
+EZH2.CR08$idxBFpass <- idxBFpass
+EZH2.CR08$BFpvaluePass <- BFpvaluePass
+EZH2.CR08$BFpassNumSites <- BFpassNumSites
+EZH2.CR08$BHpvalue <- BHpvalue
+EZH2.CR08$idxBHpass <- idxBHpass
+EZH2.CR08$BHpvaluePass <- BHpvaluePass
+EZH2.CR08$BHpassNumSites <- BHpassNumSites
 
-#### SOX2 - WT01 ####
+#### WT01 ####
 bamIn <- readGAlignments(bam.WT01, param = param)
 grIn <- granges(bamIn)
 grIn <- keepStandardChromosomes(grIn, pruning.mode="coarse")
@@ -2344,27 +2353,27 @@ idxBHpass <- which(BHpvalue < 0.05)
 BHpvaluePass <- pvalue[idxBHpass]
 BHpassNumSites <- length(idxBHpass)
 ## Transfer ##
-SOX2.WT01$insMatrix <- insMatrix
-SOX2.WT01$libSize <- libSize
-SOX2.WT01$coverageSize <- coverageSize
-SOX2.WT01$libFactor <- libFactor
-SOX2.WT01$rawSiteBasicStats <- rawSiteBasicStats
-SOX2.WT01$rawInsProb <- rawInsProb
-SOX2.WT01$ttest <- ttest
-SOX2.WT01$pvalue <- pvalue
-SOX2.WT01$tvalue <- tvalue
-SOX2.WT01$idxPvaluePass <- idxPvaluePass
-SOX2.WT01$pvaluePass <- pvaluePass
-SOX2.WT01$ppassNumSites <- ppassNumSites
-SOX2.WT01$idxBFpass <- idxBFpass
-SOX2.WT01$BFpvaluePass <- BFpvaluePass
-SOX2.WT01$BFpassNumSites <- BFpassNumSites
-SOX2.WT01$BHpvalue <- BHpvalue
-SOX2.WT01$idxBHpass <- idxBHpass
-SOX2.WT01$BHpvaluePass <- BHpvaluePass
-SOX2.WT01$BHpassNumSites <- BHpassNumSites
+EZH2.WT01$insMatrix <- insMatrix
+EZH2.WT01$libSize <- libSize
+EZH2.WT01$coverageSize <- coverageSize
+EZH2.WT01$libFactor <- libFactor
+EZH2.WT01$rawSiteBasicStats <- rawSiteBasicStats
+EZH2.WT01$rawInsProb <- rawInsProb
+EZH2.WT01$ttest <- ttest
+EZH2.WT01$pvalue <- pvalue
+EZH2.WT01$tvalue <- tvalue
+EZH2.WT01$idxPvaluePass <- idxPvaluePass
+EZH2.WT01$pvaluePass <- pvaluePass
+EZH2.WT01$ppassNumSites <- ppassNumSites
+EZH2.WT01$idxBFpass <- idxBFpass
+EZH2.WT01$BFpvaluePass <- BFpvaluePass
+EZH2.WT01$BFpassNumSites <- BFpassNumSites
+EZH2.WT01$BHpvalue <- BHpvalue
+EZH2.WT01$idxBHpass <- idxBHpass
+EZH2.WT01$BHpvaluePass <- BHpvaluePass
+EZH2.WT01$BHpassNumSites <- BHpassNumSites
 
-#### SOX2 - WT02 ####
+#### WT02 ####
 bamIn <- readGAlignments(bam.WT02, param = param)
 grIn <- granges(bamIn)
 grIn <- keepStandardChromosomes(grIn, pruning.mode="coarse")
@@ -2439,35 +2448,41 @@ idxBHpass <- which(BHpvalue < 0.05)
 BHpvaluePass <- pvalue[idxBHpass]
 BHpassNumSites <- length(idxBHpass)
 ## Transfer ##
-SOX2.WT02$insMatrix <- insMatrix
-SOX2.WT02$libSize <- libSize
-SOX2.WT02$coverageSize <- coverageSize
-SOX2.WT02$libFactor <- libFactor
-SOX2.WT02$rawSiteBasicStats <- rawSiteBasicStats
-SOX2.WT02$rawInsProb <- rawInsProb
-SOX2.WT02$ttest <- ttest
-SOX2.WT02$pvalue <- pvalue
-SOX2.WT02$tvalue <- tvalue
-SOX2.WT02$idxPvaluePass <- idxPvaluePass
-SOX2.WT02$pvaluePass <- pvaluePass
-SOX2.WT02$ppassNumSites <- ppassNumSites
-SOX2.WT02$idxBFpass <- idxBFpass
-SOX2.WT02$BFpvaluePass <- BFpvaluePass
-SOX2.WT02$BFpassNumSites <- BFpassNumSites
-SOX2.WT02$BHpvalue <- BHpvalue
-SOX2.WT02$idxBHpass <- idxBHpass
-SOX2.WT02$BHpvaluePass <- BHpvaluePass
-SOX2.WT02$BHpassNumSites <- BHpassNumSites
+EZH2.WT02$insMatrix <- insMatrix
+EZH2.WT02$libSize <- libSize
+EZH2.WT02$coverageSize <- coverageSize
+EZH2.WT02$libFactor <- libFactor
+EZH2.WT02$rawSiteBasicStats <- rawSiteBasicStats
+EZH2.WT02$rawInsProb <- rawInsProb
+EZH2.WT02$ttest <- ttest
+EZH2.WT02$pvalue <- pvalue
+EZH2.WT02$tvalue <- tvalue
+EZH2.WT02$idxPvaluePass <- idxPvaluePass
+EZH2.WT02$pvaluePass <- pvaluePass
+EZH2.WT02$ppassNumSites <- ppassNumSites
+EZH2.WT02$idxBFpass <- idxBFpass
+EZH2.WT02$BFpvaluePass <- BFpvaluePass
+EZH2.WT02$BFpassNumSites <- BFpassNumSites
+EZH2.WT02$BHpvalue <- BHpvalue
+EZH2.WT02$idxBHpass <- idxBHpass
+EZH2.WT02$BHpvaluePass <- BHpvaluePass
+EZH2.WT02$BHpassNumSites <- BHpassNumSites
 
 #### XFER AND SAVE ####
-FPdata.SOX2$WT01 <- SOX2.WT01
-FPdata.SOX2$WT02 <- SOX2.WT02
-FPdata.SOX2$CR01 <- SOX2.CR01
-FPdata.SOX2$CR02 <- SOX2.CR02
-FPdata.SOX2$CR04 <- SOX2.CR04
-FPdata.SOX2$CR05 <- SOX2.CR05
-FPdata.SOX2$CR07 <- SOX2.CR07
-FPdata.SOX2$CR08 <- SOX2.CR08
+FPdata.EZH2$WT01 <- EZH2.WT01
+FPdata.EZH2$WT02 <- EZH2.WT02
+FPdata.EZH2$CR01 <- EZH2.CR01
+FPdata.EZH2$CR02 <- EZH2.CR02
+FPdata.EZH2$CR04 <- EZH2.CR04
+FPdata.EZH2$CR05 <- EZH2.CR05
+FPdata.EZH2$CR07 <- EZH2.CR07
+FPdata.EZH2$CR08 <- EZH2.CR08
 #### SAVE ####
-outPath <- "C:\\Users\\jsk33\\Desktop\\lncap\\FPdata.SOX2.RDS"
-saveRDS(FPdata.SOX2, file = outPath)
+outPath <- "C:\\Users\\jsk33\\Desktop\\lncap\\FPdata.EZH2.RDS"
+saveRDS(FPdata.EZH2, file = outPath)
+```
+
+
+
+
+
