@@ -59,6 +59,7 @@ generateNullFP <- function(iterations, inputSignal, analysisWidth, motifWidth){
   } # end for (a in 1:n)
   return(averages)
 } # end generateNullFP function
+
 #### INPUT FILES ##################################################################################################
 bam.CR01 <- "C:\\Users\\jsk33\\Desktop\\lncap\\LNCaP-CR-01-REP1.u.bam"
 bai.CR01 <- "C:\\Users\\jsk33\\Desktop\\lncap\\LNCaP-CR-01-REP1.u.bai"
@@ -73,7 +74,9 @@ bai.CR07 <- "C:\\Users\\jsk33\\Desktop\\lncap\\LNCaP-CR-07-REP1.u.bai"
 bam.CR08 <- "C:\\Users\\jsk33\\Desktop\\lncap\\LNCaP-CR-08-REP1.u.bam"
 bai.CR08 <- "C:\\Users\\jsk33\\Desktop\\lncap\\LNCaP-CR-08-REP1.u.bai"
 bam.WT01 <- "C:\\Users\\jsk33\\Desktop\\lncap\\LNCaP-WT-01-REP1.u.bam"
-bai.WT01 <- "C:\\Users\\jsk33\\Desktop\\lncap\\LNCaP-WT-02-REP1.u.bai"
+bai.WT01 <- "C:\\Users\\jsk33\\Desktop\\lncap\\LNCaP-WT-01-REP1.u.bai"
+bam.WT02 <- "C:\\Users\\jsk33\\Desktop\\lncap\\LNCaP-WT-02-REP1.u.bam"
+bai.WT02 <- "C:\\Users\\jsk33\\Desktop\\lncap\\LNCaP-WT-02-REP1.u.bai"
 ##
 AR.sites.path <- "C:\\Users\\jsk33\\Desktop\\lncap\\AR.bindingSites.RDS"
 EZH2.sites.path <- "C:\\Users\\jsk33\\Desktop\\lncap\\EZH2.bindingSites.RDS"
@@ -880,15 +883,15 @@ FPdata.AR$CR08 <- AR.CR08
 
 #### BINDING MATRIX ####
 AR.bindingMatrix <- matrix(data = 0, nrow = 8, ncol = numSites)
-rownames(AR.bindingMatrix) <- c("WT01", "WT02", "CR01", "CR02", "CR04", "CR05", "CR07", "Cr08")
+rownames(AR.bindingMatrix) <- c("WT01", "WT02", "CR01", "CR02", "CR04", "CR05", "CR07", "CR08")
 AR.bindingMatrix[1,AR.WT01[["idxBFpass"]]] <- 1
 AR.bindingMatrix[2,AR.WT02[["idxBFpass"]]] <- 1
 AR.bindingMatrix[3,AR.CR01[["idxBFpass"]]] <- 1
-AR.bindingMatrix[4,AR.CR01[["idxBFpass"]]] <- 1
-AR.bindingMatrix[5,AR.CR01[["idxBFpass"]]] <- 1
-AR.bindingMatrix[6,AR.CR01[["idxBFpass"]]] <- 1
-AR.bindingMatrix[7,AR.CR01[["idxBFpass"]]] <- 1
-AR.bindingMatrix[8,AR.CR01[["idxBFpass"]]] <- 1
+AR.bindingMatrix[4,AR.CR02[["idxBFpass"]]] <- 1
+AR.bindingMatrix[5,AR.CR04[["idxBFpass"]]] <- 1
+AR.bindingMatrix[6,AR.CR05[["idxBFpass"]]] <- 1
+AR.bindingMatrix[7,AR.CR07[["idxBFpass"]]] <- 1
+AR.bindingMatrix[8,AR.CR08[["idxBFpass"]]] <- 1
 FPdata.AR$bindingMatrix <- AR.bindingMatrix
 
 #### SAVE ####
