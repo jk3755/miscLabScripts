@@ -193,6 +193,14 @@ analyzeFP <- function(geneName, geneSitesPath, sampleName, sampleBamPath){
   return(tempList)
 }
 
+importBED <- function(bedPath){
+  bedin <- readBed(bedPath, track.line = FALSE, remove.unusual = FALSE, zero.based = TRUE)
+  bedin <- keepStandardChromosomes(bedin, pruning.mode="coarse")
+  bedin <- trim(bedin)
+  return(bedin)
+}
+
+
 #### INPUT FILES ##################################################################################################
 bam.CR01 <- "C:\\Users\\jsk33\\Desktop\\lncap\\LNCaP-CR-01-REP1.u.bam"
 bai.CR01 <- "C:\\Users\\jsk33\\Desktop\\lncap\\LNCaP-CR-01-REP1.u.bai"
@@ -478,6 +486,55 @@ FPdata.FOXM1 <- readRDS("C:\\Users\\jsk33\\Documents\\git\\miscLabScripts\\analy
 
 ```
 
+Plots
+```{r}
+install.packages("pheatmap")
+library(pheatmap)
+
+library(dplyr)
+
+AR.matrix <- FPdata.AR[["bindingMatrix"]]
+x <- AR.matrix[,1:100]
+pheatmap(x)
+
+## Subset for only locations where both WT are the same
+y <- as.data.frame(AR.matrix)
+z <- dplyr::filter(y, WT01 == 1, WT02 == 2)
+
+aa <- which(y[1,] == 1 & y[2,] == 1)
+ab <- which(y[1,] == 0 & y[2,] == 0)
+ac <- c(aa, ab)
+new <- y[1:8,ac]
+
+new2 <- new[,24728:24828]
+pheatmap(new2,
+         cluster_rows = FALSE,
+         cluster_cols = FALSE)
+
+
+EZH2.matrix <- FPdata.EZH2[["bindingMatrix"]]
+x <- EZH2.matrix[,1:100]
+pheatmap(x)
+
+FOXM1.matrix <- FPdata.FOXM1[["bindingMatrix"]]
+x <- FOXM1.matrix[,1:100]
+pheatmap(x)
+
+MYC.matrix <- FPdata.MYC[["bindingMatrix"]]
+x <- MYC.matrix[,1:100]
+pheatmap(x)
+
+MYCN.matrix <- FPdata.MYCN[["bindingMatrix"]]
+x <- MYCN.matrix[,1:100]
+pheatmap(x)
+
+SOX2.matrix <- FPdata.SOX2[["bindingMatrix"]]
+x <- SOX2.matrix[,1:100]
+pheatmap(x)
+
+
+```
+
 Peaks
 ```{r}
 
@@ -533,8 +590,124 @@ ctrl.wt02.treat.cr08.peaks <- readBed(ctrl.wt02.treat.cr08.peaksPath, track.line
 ctrl.wt02.treat.cr08.peaks <- keepStandardChromosomes(ctrl.wt02.treat.cr08.peaks, pruning.mode="coarse")
 ctrl.wt02.treat.cr08.peaks <- trim(ctrl.wt02.treat.cr08.peaks)
 
+```
 
 
+
+Peak overlaps
+```{r}
+
+WT01.peaksPath <- "C:\\Users\\jsk33\\Desktop\\peaks\\LNCaP-WT-01-REP1_globalnorm_peaks.narrowPeak"
+WT02.peaksPath <- "C:\\Users\\jsk33\\Desktop\\peaks\\LNCaP-WT-02-REP1_globalnorm_peaks.narrowPeak"
+CR01.peaksPath <- "C:\\Users\\jsk33\\Desktop\\peaks\\LNCaP-CR-01-REP1_globalnorm_peaks.narrowPeak"
+CR02.peaksPath <- "C:\\Users\\jsk33\\Desktop\\peaks\\LNCaP-CR-02-REP1_globalnorm_peaks.narrowPeak"
+CR04.peaksPath <- "C:\\Users\\jsk33\\Desktop\\peaks\\LNCaP-CR-04-REP1_globalnorm_peaks.narrowPeak"
+CR05.peaksPath <- "C:\\Users\\jsk33\\Desktop\\peaks\\LNCaP-CR-05-REP1_globalnorm_peaks.narrowPeak"
+CR07.peaksPath <- "C:\\Users\\jsk33\\Desktop\\peaks\\LNCaP-CR-07-REP1_globalnorm_peaks.narrowPeak"
+CR08.peaksPath <- "C:\\Users\\jsk33\\Desktop\\peaks\\LNCaP-CR-08-REP1_globalnorm_peaks.narrowPeak"
+
+WT01.peaks <- importBED(WT01.peaksPath)
+WT02.peaks <- importBED(WT02.peaksPath)
+CR01.peaks <- importBED(CR01.peaksPath)
+CR02.peaks <- importBED(CR02.peaksPath)
+CR04.peaks <- importBED(CR04.peaksPath)
+CR05.peaks <- importBED(CR05.peaksPath)
+CR07.peaks <- importBED(CR07.peaksPath)
+CR08.peaks <- importBED(CR08.peaksPath)
+
+
+FPdata.AR.WT01 <- FPdata.AR[["WT01"]]
+FPdata.AR.WT01.inputSites <- FPdata.AR.WT01[["inputSites"]]
+WT01.AR.peak.overlap.index <- findOverlaps(FPdata.AR.WT01.inputSites, WT01.peaks)
+AR.WT01.idx <- unique(WT01.AR.peak.overlap.index@from)
+
+FPdata.AR.WT02 <- FPdata.AR[["WT02"]]
+FPdata.AR.WT02.inputSites <- FPdata.AR.WT02[["inputSites"]]
+WT02.AR.peak.overlap.index <- findOverlaps(FPdata.AR.WT02.inputSites, WT02.peaks)
+AR.WT02.idx <- unique(WT02.AR.peak.overlap.index@from)
+
+FPdata.AR.CR01 <- FPdata.AR[["CR01"]]
+FPdata.AR.CR01.inputSites <- FPdata.AR.CR01[["inputSites"]]
+CR01.AR.peak.overlap.index <- findOverlaps(FPdata.AR.CR01.inputSites, CR01.peaks)
+AR.CR01.idx <- unique(CR01.AR.peak.overlap.index@from)
+
+FPdata.AR.CR02 <- FPdata.AR[["CR02"]]
+FPdata.AR.CR02.inputSites <- FPdata.AR.CR02[["inputSites"]]
+CR02.AR.peak.overlap.index <- findOverlaps(FPdata.AR.CR02.inputSites, CR02.peaks)
+AR.CR02.idx <- unique(CR02.AR.peak.overlap.index@from)
+
+FPdata.AR.CR04 <- FPdata.AR[["CR04"]]
+FPdata.AR.CR04.inputSites <- FPdata.AR.CR04[["inputSites"]]
+CR04.AR.peak.overlap.index <- findOverlaps(FPdata.AR.CR04.inputSites, CR04.peaks)
+AR.CR04.idx <- unique(CR04.AR.peak.overlap.index@from)
+
+FPdata.AR.CR05 <- FPdata.AR[["CR05"]]
+FPdata.AR.CR05.inputSites <- FPdata.AR.CR05[["inputSites"]]
+CR05.AR.peak.overlap.index <- findOverlaps(FPdata.AR.CR05.inputSites, CR05.peaks)
+AR.CR05.idx <- unique(CR05.AR.peak.overlap.index@from)
+
+FPdata.AR.CR07 <- FPdata.AR[["CR07"]]
+FPdata.AR.CR07.inputSites <- FPdata.AR.CR07[["inputSites"]]
+CR07.AR.peak.overlap.index <- findOverlaps(FPdata.AR.CR07.inputSites, CR07.peaks)
+AR.CR07.idx <- unique(CR07.AR.peak.overlap.index@from)
+
+FPdata.AR.CR08 <- FPdata.AR[["CR08"]]
+FPdata.AR.CR08.inputSites <- FPdata.AR.CR08[["inputSites"]]
+CR08.AR.peak.overlap.index <- findOverlaps(FPdata.AR.CR08.inputSites, CR08.peaks)
+AR.CR08.idx <- unique(CR08.AR.peak.overlap.index@from)
+
+
+
+newmatrix <- matrix(data = 0, nrow = 8, ncol = 62585)
+rownames(newmatrix) <- c("WT01", "WT02", "CR01", "CR02", "CR04", "CR05", "CR07", "CR08")
+newmatrix[1,AR.WT01.idx] <- 1
+newmatrix[2,AR.WT02.idx] <- 1
+newmatrix[3,AR.CR01.idx] <- 1
+newmatrix[4,AR.CR02.idx] <- 1
+newmatrix[5,AR.CR04.idx] <- 1
+newmatrix[6,AR.CR05.idx] <- 1
+newmatrix[7,AR.CR07.idx] <- 1
+newmatrix[8,AR.CR08.idx] <- 1
+
+pheatmap(newmatrix[,1:100],
+         cluster_rows = FALSE,
+         cluster_cols = FALSE)
+
+
+
+
+
+
+
+
+
+
+AR.matrix <- FPdata.AR[["bindingMatrix"]]
+x <- AR.matrix[,AR.WT01.idx]
+pheatmap(x[,100:200])
+
+y <- as.data.frame(AR.matrix)
+z <- dplyr::filter(y, WT01 == 1, WT02 == 2)
+
+aa <- which(y[1,] == 1 & y[2,] == 1)
+ab <- which(y[1,] == 0 & y[2,] == 0)
+ac <- c(aa, ab)
+new <- y[1:8,ac]
+
+new2 <- new[,24728:24828]
+pheatmap(new2,
+         cluster_rows = FALSE,
+         cluster_cols = FALSE)
+
+
+
+
+
+```
+
+
+Replicate Peaks
+```{r}
 
 
 
