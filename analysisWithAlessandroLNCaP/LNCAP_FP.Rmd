@@ -466,6 +466,18 @@ saveRDS(FPdata.FOXM1, file = outPath)
 
 ```
 
+Load FP data
+```{r}
+
+FPdata.AR <- readRDS("C:\\Users\\jsk33\\Documents\\git\\miscLabScripts\\analysisWithAlessandroLNCaP\\FPdata.AR.RDS")
+FPdata.SOX2 <- readRDS("C:\\Users\\jsk33\\Documents\\git\\miscLabScripts\\analysisWithAlessandroLNCaP\\FPdata.SOX2.RDS")
+FPdata.EZH2 <- readRDS("C:\\Users\\jsk33\\Documents\\git\\miscLabScripts\\analysisWithAlessandroLNCaP\\FPdata.EZH2.RDS")
+FPdata.MYCN <- readRDS("C:\\Users\\jsk33\\Documents\\git\\miscLabScripts\\analysisWithAlessandroLNCaP\\FPdata.MYCN.RDS")
+FPdata.MYC <- readRDS("C:\\Users\\jsk33\\Documents\\git\\miscLabScripts\\analysisWithAlessandroLNCaP\\FPdata.MYC.RDS")
+FPdata.FOXM1 <- readRDS("C:\\Users\\jsk33\\Documents\\git\\miscLabScripts\\analysisWithAlessandroLNCaP\\FPdata.FOXM1.RDS")
+
+```
+
 Peaks
 ```{r}
 
@@ -484,16 +496,44 @@ ctrl.wt02.treat.cr07.peaksPath <- "C:\\Users\\jsk33\\Desktop\\diffpeaks\\ctrl-wt
 ctrl.wt02.treat.cr08.peaksPath <- "C:\\Users\\jsk33\\Desktop\\diffpeaks\\ctrl-wt02.treat-cr08_peaks.narrowPeak"
 
 ctrl.wt01.treat.cr01.peaks <- readBed(ctrl.wt01.treat.cr01.peaksPath, track.line = FALSE, remove.unusual = FALSE, zero.based = TRUE)
+ctrl.wt01.treat.cr01.peaks <- keepStandardChromosomes(ctrl.wt01.treat.cr01.peaks, pruning.mode="coarse")
+ctrl.wt01.treat.cr01.peaks <- trim(ctrl.wt01.treat.cr01.peaks)
 ctrl.wt01.treat.cr02.peaks <- readBed(ctrl.wt01.treat.cr02.peaksPath, track.line = FALSE, remove.unusual = FALSE, zero.based = TRUE)
+ctrl.wt01.treat.cr02.peaks <- keepStandardChromosomes(ctrl.wt01.treat.cr02.peaks, pruning.mode="coarse")
+ctrl.wt01.treat.cr02.peaks <- trim(ctrl.wt01.treat.cr02.peaks)
 ctrl.wt01.treat.cr04.peaks <- readBed(ctrl.wt01.treat.cr04.peaksPath, track.line = FALSE, remove.unusual = FALSE, zero.based = TRUE)
+ctrl.wt01.treat.cr04.peaks <- keepStandardChromosomes(ctrl.wt01.treat.cr04.peaks, pruning.mode="coarse")
+ctrl.wt01.treat.cr04.peaks <- trim(ctrl.wt01.treat.cr04.peaks)
 ctrl.wt01.treat.cr05.peaks <- readBed(ctrl.wt01.treat.cr05.peaksPath, track.line = FALSE, remove.unusual = FALSE, zero.based = TRUE)
+ctrl.wt01.treat.cr05.peaks <- keepStandardChromosomes(ctrl.wt01.treat.cr05.peaks, pruning.mode="coarse")
+ctrl.wt01.treat.cr05.peaks <- trim(ctrl.wt01.treat.cr05.peaks)
 ctrl.wt01.treat.cr07.peaks <- readBed(ctrl.wt01.treat.cr07.peaksPath, track.line = FALSE, remove.unusual = FALSE, zero.based = TRUE)
+ctrl.wt01.treat.cr07.peaks <- keepStandardChromosomes(ctrl.wt01.treat.cr07.peaks, pruning.mode="coarse")
+ctrl.wt01.treat.cr07.peaks <- trim(ctrl.wt01.treat.cr07.peaks)
 ctrl.wt01.treat.cr08.peaks <- readBed(ctrl.wt01.treat.cr08.peaksPath, track.line = FALSE, remove.unusual = FALSE, zero.based = TRUE)
+ctrl.wt01.treat.cr08.peaks <- keepStandardChromosomes(ctrl.wt01.treat.cr08.peaks, pruning.mode="coarse")
+ctrl.wt01.treat.cr08.peaks <- trim(ctrl.wt01.treat.cr08.peaks)
+
+ctrl.wt02.treat.cr01.peaks <- readBed(ctrl.wt02.treat.cr01.peaksPath, track.line = FALSE, remove.unusual = FALSE, zero.based = TRUE)
+ctrl.wt02.treat.cr01.peaks <- keepStandardChromosomes(ctrl.wt02.treat.cr01.peaks, pruning.mode="coarse")
+ctrl.wt02.treat.cr01.peaks <- trim(ctrl.wt02.treat.cr01.peaks)
+ctrl.wt02.treat.cr02.peaks <- readBed(ctrl.wt02.treat.cr02.peaksPath, track.line = FALSE, remove.unusual = FALSE, zero.based = TRUE)
+ctrl.wt02.treat.cr02.peaks <- keepStandardChromosomes(ctrl.wt02.treat.cr02.peaks, pruning.mode="coarse")
+ctrl.wt02.treat.cr02.peaks <- trim(ctrl.wt02.treat.cr02.peaks)
+ctrl.wt02.treat.cr04.peaks <- readBed(ctrl.wt02.treat.cr04.peaksPath, track.line = FALSE, remove.unusual = FALSE, zero.based = TRUE)
+ctrl.wt02.treat.cr04.peaks <- keepStandardChromosomes(ctrl.wt02.treat.cr04.peaks, pruning.mode="coarse")
+ctrl.wt02.treat.cr04.peaks <- trim(ctrl.wt02.treat.cr04.peaks)
+ctrl.wt02.treat.cr05.peaks <- readBed(ctrl.wt02.treat.cr05.peaksPath, track.line = FALSE, remove.unusual = FALSE, zero.based = TRUE)
+ctrl.wt02.treat.cr05.peaks <- keepStandardChromosomes(ctrl.wt02.treat.cr05.peaks, pruning.mode="coarse")
+ctrl.wt02.treat.cr05.peaks <- trim(ctrl.wt02.treat.cr05.peaks)
+ctrl.wt02.treat.cr07.peaks <- readBed(ctrl.wt02.treat.cr07.peaksPath, track.line = FALSE, remove.unusual = FALSE, zero.based = TRUE)
+ctrl.wt02.treat.cr07.peaks <- keepStandardChromosomes(ctrl.wt02.treat.cr07.peaks, pruning.mode="coarse")
+ctrl.wt02.treat.cr07.peaks <- trim(ctrl.wt02.treat.cr07.peaks)
+ctrl.wt02.treat.cr08.peaks <- readBed(ctrl.wt02.treat.cr08.peaksPath, track.line = FALSE, remove.unusual = FALSE, zero.based = TRUE)
+ctrl.wt02.treat.cr08.peaks <- keepStandardChromosomes(ctrl.wt02.treat.cr08.peaks, pruning.mode="coarse")
+ctrl.wt02.treat.cr08.peaks <- trim(ctrl.wt02.treat.cr08.peaks)
 
 
-
-samplePeaks <- keepStandardChromosomes(samplePeaks, pruning.mode="coarse")
-samplePeaks <- trim(samplePeaks)
 
 
 
