@@ -1,0 +1,280 @@
+
+SETUP
+```{r}
+#### Disable scientific notation in variables
+options(scipen = 999)
+options(warn = -1)
+hg38TotalBP <- 3272116950
+
+suppressMessages(library(GenomicRanges))
+suppressMessages(library(Rsamtools))
+suppressMessages(library(GenomicAlignments))
+suppressMessages(library(stats4))
+suppressMessages(library(BiocGenerics))
+suppressMessages(library(parallel))
+suppressMessages(library(genomation))
+suppressMessages(library(seqLogo))
+suppressMessages(library(ChIPpeakAnno))
+suppressMessages(library(rlist))
+suppressMessages(library(TxDb.Hsapiens.UCSC.hg38.knownGene))
+
+generateNullFP <- function(iterations, inputSignal, analysisWidth, motifWidth){
+  # This script will be used to generate indiviudal null models at predicted motif binding sites across the genome when scanning for TF footprinting from ATAC-seq data. To generate these null models, the current model will need to:
+  # Consider the total signal (number of insertions) at each specific ~200 bp locus
+  # Use the actul underlying reference sequence of that ~200 bp stretch from the hg38 reference genome
+  # Use published or experimentally derived models of Tn5 sequence specific insertion bias
+  # For each locus, build a probablistic model of insertion site distributions based on the underlying sequence and Tn5 insertion bias
+  # Generate the null model graph by weighted random residstribution of the total observed signal at that site
+  # Importantly, the null model must be generated separately for the plus and minus strand, it can then be combined and compared to the combined signal from the reference observed signal at that sequence
+  # These null models can then be used for a site-by-site comparison of the null model against the observed data to accept or reject the null hypothesis
+  # iterations = number of iterations
+  # inputSignals = unique values for total signal
+  # analysisWidth = total bp in region of interest (flank + background + motif)
+  # motifWidth = motif width
+  
+  # declare vector of size n to store average motif signal values
+  averages <- c()
+  
+  # generate the null models and calculate motif averages
+  for (a in 1:iterations){
+    
+    # declare the null vector
+    null <- c(1:(analysisWidth))
+    
+    # randomly distribute the total signal
+    # size = the number of values to distribute
+    # prob = probability of each site
+    # length = length of the generated vector
+    null <- c(as.vector(rmultinom(1, size=inputSignal, prob=rep(1, length(null)))))
+    
+    ## Calculate the mean signal in motif region
+    motifStart <- ((analysisWidth - motifWidth)/2)
+    motifEnd <- (motifStart + motifWidth)
+    motifAvg <- (sum(null[motifStart:motifEnd])) / motifWidth
+    
+    ## Store the average values
+    averages[a] <- motifAvg
+    
+  } # end for (a in 1:n)
+  return(averages)
+} # end generateNullFP function
+
+analyzeFP <- function(geneName, geneSitesPath, sampleName, sampleBamPath){
+  
+  cat("Input variables:", "\n", geneName, "\n", geneSitesPath, "\n", sampleName, "\n", sampleBamPath, "\n")
+  
+  cat("Reading sites RDS", "\n")
+  sites <- readRDS(geneSitesPath)
+  inputSites <- sites[[1]][["sites"]]
+  inputSites@elementType <- "GENE"
+  inputSites <- keepStandardChromosomes(inputSites, pruning.mode="coarse")
+  inputSites <- trim(inputSites)
+  
+  cat("Checking number of sites and motif width", "\n")
+  motifWidth <- length(sites[[1]][["PWM"]][1,])
+  numSites <- length(inputSites)
+  
+  cat("Extending sites", "\n")
+  extSites <- promoters(inputSites, upstream = 250, downstream = (250 + motifWidth), use.names=TRUE)
+  extSites <- keepStandardChromosomes(extSites, pruning.mode="coarse")
+  extSites <- trim(extSites)
+  
+  param <- ScanBamParam(which = extSites)
+  
+  bamIn <- readGAlignments(sampleBamPath, param = param)
+  grIn <- granges(bamIn)
+  grIn <- keepStandardChromosomes(grIn, pruning.mode="coarse")
+  grIn <- trim(grIn)
+  grIn2 <- resize(grIn, width = 1)
+  plusIdx <- which(strand(grIn2) == "+")
+  minusIdx <- which(strand(grIn2) == "-")
+  grPlus <- grIn2[plusIdx]
+  grMinus <- grIn2[minusIdx]
+  grPlusShifted <- shift(grPlus, shift=4L)
+  grMinusShifted <- shift(grMinus, shift=-5L)
+  grMerged <- c(grPlusShifted, grMinusShifted)
+  shiftedInsertions <- grMerged
+  insRLE <- coverage(grMerged)
+  insViews <- Views(insRLE, extSites)
+  insMatrix <- as.matrix(insViews)
+  libSize <- length(bamIn)
+  coverageSize <- sum(as.numeric(width(reduce(grIn, ignore.strand=TRUE))))
+  libFactor <- libSize / coverageSize
+  
+  rawSiteBasicStats <- matrix(data = NA, nrow = numSites, ncol = 10)
+  colnames(rawSiteBasicStats) <- c("Site index", "Total signal", "Total signal per bp", "Motif signal per bp",
+                                 "Flank signal per bp", "Background signal per bp", "Wide flank signal per bp",
+                                 "Flank / Background", "Motif / Flank", "Motif / Wide Flank")
+  
+  for (b in 1:numSites){
+    rawSiteBasicStats[b,1] <- b # Site index
+    rawSiteBasicStats[b,2] <- sum(insMatrix[b,]) # Total signal
+    rawSiteBasicStats[b,3] <- rawSiteBasicStats[b,2] / (500 + motifWidth) # Total signal per bp
+    rawSiteBasicStats[b,4] <- sum(insMatrix[b,(250:(250 + motifWidth))] / motifWidth) # Motif signal per bp
+    rawSiteBasicStats[b,5] <- (sum(insMatrix[b,200:250]) + sum(insMatrix[b,(250 + motifWidth):(300 + motifWidth)])) / 100 # Flank signal per bp
+    rawSiteBasicStats[b,6] <- (sum(insMatrix[b,1:50]) + sum(insMatrix[b,(500 + motifWidth-50):(500 + motifWidth)])) / 100 # Background signal per bp
+    rawSiteBasicStats[b,7] <- (sum(insMatrix[b,1:250]) + sum(insMatrix[b,(250 + motifWidth):(500 + motifWidth)])) / 500 # Wide flank signal per bp
+    rawSiteBasicStats[b,8] <- rawSiteBasicStats[b,5] / rawSiteBasicStats[b,6] # Flank / background
+    rawSiteBasicStats[b,9] <- rawSiteBasicStats[b,4] / rawSiteBasicStats[b,5] # Motif / flank
+    rawSiteBasicStats[b,10] <- rawSiteBasicStats[b,4] / rawSiteBasicStats[b,7] # Motif / wide flank
+  } # end for (b in 1:numSites)
+  
+  rawInsProb <- c()
+  
+  for (c in 1:(500 + motifWidth)){
+    rawInsProb[c] <- sum(insMatrix[,c])
+  } # end for (c in 1:(500 + motifWidth))
+  
+  rawTotalSignal<- sum(rawInsProb)
+  rawInsProb <- rawInsProb / rawTotalSignal
+  uniqueTotalSignals <- unique(rawSiteBasicStats[,2])
+  siteWidth <- 500 + motifWidth
+  
+  nullModels <- matrix(data = NA, ncol = 2, nrow = length(uniqueTotalSignals))
+  colnames(nullModels) <- c("Input signal", "Avg motif signal in null model")
+  
+  for (c in 1:length(uniqueTotalSignals)){
+    nullVec <- generateNullFP(1000, uniqueTotalSignals[c], siteWidth, motifWidth)
+    nullModels[c,1] <- uniqueTotalSignals[c]
+    nullModels[c,2] <- mean(nullVec)
+  } # end for (c in 1:length(uniqueTotalSignals))
+  
+  ttest <- list()
+  pvalue <- c()
+  tvalue <- c()
+  
+  for (d in 1:numSites){
+    currentSignal <- c(rawSiteBasicStats[d,2])
+    currentNullModel <- nullModels[which(nullModels[,1]==currentSignal),2]
+    ttest[[d]] <- t.test(insMatrix[d,250:(250+motifWidth)], mu=currentNullModel, alternative="less", conf.level = 0.95)
+    pvalue[d] <- ttest[[d]][["p.value"]]
+    tvalue[d] <- ttest[[d]][["statistic"]][["t"]]
+  } # end for (d in 1:numSites)
+  
+  idxPvaluePass <- which(pvalue < 0.05)
+  pvaluePass <- pvalue[idxPvaluePass]
+  ppassNumSites <- length(idxPvaluePass)
+  idxBFpass <- which(pvalue < (0.05 / numSites))
+  BFpvaluePass <- pvalue[idxBFpass]
+  BFpassNumSites <- length(idxBFpass)
+  BHpvalue <- p.adjust(pvalue, method = "BH")
+  idxBHpass <- which(BHpvalue < 0.05)
+  BHpvaluePass <- pvalue[idxBHpass]
+  BHpassNumSites <- length(idxBHpass)
+  
+  tempList <- list()
+  tempList$geneName <- geneName
+  tempList$geneSitesPath <- geneSitesPath
+  tempList$sampleName <- sampleName
+  tempList$sampleBamPath <- sampleBamPath
+  tempList$numSites <- numSites
+  tempList$motifWidth <- motifWidth
+  tempList$PWM <- sites[[1]][["PWM"]]
+  tempList$inputSites <- inputSites
+  tempList$extSites <- extSites
+  tempList$insMatrix <- insMatrix
+  tempList$libSize <- libSize
+  tempList$coverageSize <- coverageSize
+  tempList$libFactor <- libFactor
+  tempList$rawSiteBasicStats <- rawSiteBasicStats
+  tempList$rawInsProb <- rawInsProb
+  tempList$ttest <- ttest
+  tempList$pvalue <- pvalue
+  tempList$tvalue <- tvalue
+  tempList$idxPvaluePass <- idxPvaluePass
+  tempList$pvaluePass <- pvaluePass
+  tempList$ppassNumSites <- ppassNumSites
+  tempList$idxBFpass <- idxBFpass
+  tempList$BFpvaluePass <- BFpvaluePass
+  tempList$BFpassNumSites <- BFpassNumSites
+  tempList$BHpvalue <- BHpvalue
+  tempList$idxBHpass <- idxBHpass
+  tempList$BHpvaluePass <- BHpvaluePass
+  tempList$BHpassNumSites <- BHpassNumSites
+
+  return(tempList)
+}
+
+#### INPUT FILES ##################################################################################################
+bam.CR01 <- "C:\\Users\\jsk33\\Desktop\\lncap\\LNCaP-CR-01-REP1.u.bam"
+bai.CR01 <- "C:\\Users\\jsk33\\Desktop\\lncap\\LNCaP-CR-01-REP1.u.bai"
+bam.CR02 <- "C:\\Users\\jsk33\\Desktop\\lncap\\LNCaP-CR-02-REP1.u.bam"
+bai.CR02 <- "C:\\Users\\jsk33\\Desktop\\lncap\\LNCaP-CR-02-REP1.u.bai"
+bam.CR04 <- "C:\\Users\\jsk33\\Desktop\\lncap\\LNCaP-CR-04-REP1.u.bam"
+bai.CR04 <- "C:\\Users\\jsk33\\Desktop\\lncap\\LNCaP-CR-04-REP1.u.bai"
+bam.CR05 <- "C:\\Users\\jsk33\\Desktop\\lncap\\LNCaP-CR-05-REP1.u.bam"
+bai.CR05 <- "C:\\Users\\jsk33\\Desktop\\lncap\\LNCaP-CR-05-REP1.u.bai"
+bam.CR07 <- "C:\\Users\\jsk33\\Desktop\\lncap\\LNCaP-CR-07-REP1.u.bam"
+bai.CR07 <- "C:\\Users\\jsk33\\Desktop\\lncap\\LNCaP-CR-07-REP1.u.bai"
+bam.CR08 <- "C:\\Users\\jsk33\\Desktop\\lncap\\LNCaP-CR-08-REP1.u.bam"
+bai.CR08 <- "C:\\Users\\jsk33\\Desktop\\lncap\\LNCaP-CR-08-REP1.u.bai"
+bam.WT01 <- "C:\\Users\\jsk33\\Desktop\\lncap\\LNCaP-WT-01-REP1.u.bam"
+bai.WT01 <- "C:\\Users\\jsk33\\Desktop\\lncap\\LNCaP-WT-01-REP1.u.bai"
+bam.WT02 <- "C:\\Users\\jsk33\\Desktop\\lncap\\LNCaP-WT-02-REP1.u.bam"
+bai.WT02 <- "C:\\Users\\jsk33\\Desktop\\lncap\\LNCaP-WT-02-REP1.u.bai"
+##
+AR.sites.path <- "C:\\Users\\jsk33\\Documents\\git\\miscLabScripts\\analysisWithAlessandroLNCaP\\AR.bindingSites.RDS"
+EZH2.sites.path <- "C:\\Users\\jsk33\\Documents\\git\\miscLabScripts\\analysisWithAlessandroLNCaP\\EZH2.bindingSites.RDS"
+FOXM1.sites.path <- "C:\\Users\\jsk33\\Documents\\git\\miscLabScripts\\analysisWithAlessandroLNCaP\\FOXM1.bindingSites.RDS"
+MYC.sites.path <- "C:\\Users\\jsk33\\Documents\\git\\miscLabScripts\\analysisWithAlessandroLNCaP\\MYC.bindingSites.RDS"
+MYCN.sites.path <- "C:\\Users\\jsk33\\Documents\\git\\miscLabScripts\\analysisWithAlessandroLNCaP\\MYCN.bindingSites.RDS"
+SOX2.sites.path <- "C:\\Users\\jsk33\\Documents\\git\\miscLabScripts\\analysisWithAlessandroLNCaP\\SOX2.bindingSites.RDS"
+#### INPUT FILES ##################################################################################################
+```
+
+
+
+
+AR
+```{r}
+
+
+AR.FP.data.CR01 <- analyzeFP("AR", AR.sites.path, "CR01", bam.CR01)
+
+
+
+
+FPdata.AR <- list()
+AR.CR01 <- list()
+AR.CR02 <- list()
+AR.CR04 <- list()
+AR.CR05 <- list()
+AR.CR07 <- list()
+AR.CR08 <- list()
+AR.WT01 <- list()
+AR.WT02 <- list()
+#### XFER ####
+FPdata.AR$WT01 <- AR.WT01
+FPdata.AR$WT02 <- AR.WT02
+FPdata.AR$CR01 <- AR.CR01
+FPdata.AR$CR02 <- AR.CR02
+FPdata.AR$CR04 <- AR.CR04
+FPdata.AR$CR05 <- AR.CR05
+FPdata.AR$CR07 <- AR.CR07
+FPdata.AR$CR08 <- AR.CR08
+#### BINDING MATRIX ####
+AR.bindingMatrix <- matrix(data = 0, nrow = 8, ncol = numSites)
+rownames(AR.bindingMatrix) <- c("WT01", "WT02", "CR01", "CR02", "CR04", "CR05", "CR07", "CR08")
+AR.bindingMatrix[1,AR.WT01[["idxBFpass"]]] <- 1
+AR.bindingMatrix[2,AR.WT02[["idxBFpass"]]] <- 1
+AR.bindingMatrix[3,AR.CR01[["idxBFpass"]]] <- 1
+AR.bindingMatrix[4,AR.CR02[["idxBFpass"]]] <- 1
+AR.bindingMatrix[5,AR.CR04[["idxBFpass"]]] <- 1
+AR.bindingMatrix[6,AR.CR05[["idxBFpass"]]] <- 1
+AR.bindingMatrix[7,AR.CR07[["idxBFpass"]]] <- 1
+AR.bindingMatrix[8,AR.CR08[["idxBFpass"]]] <- 1
+FPdata.AR$bindingMatrix <- AR.bindingMatrix
+#### SAVE ####
+outPath <- "C:\\Users\\jsk33\\Desktop\\lncap\\FPdata.AR.RDS"
+saveRDS(FPdata.AR, file = outPath)
+
+
+
+```
+
+SOX2
+EZH2
+MYCN
+MYC
+FOXM1
+
